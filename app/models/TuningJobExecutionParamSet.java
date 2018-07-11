@@ -21,47 +21,35 @@ import java.sql.Timestamp;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
-import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
-
 import play.db.ebean.Model;
 
-
 @Entity
-@Table(name = "flow_execution")
-public class FlowExecution extends Model {
+@Table(name = "tuning_job_execution_param_set")
+public class TuningJobExecutionParamSet extends Model {
 
-  private static final long serialVersionUID = -530850411828978454L;
-
+  private static final long serialVersionUID = 1L;
   public static class TABLE {
-    public static final String TABLE_NAME = "flow_execution";
-    public static final String id = "id";
-    public static final String flowExecId = "flowExecId";
-    public static final String flowExecUrl = "flowExecUrl";
-    public static final String flowDefinition = "flowDefinition";
+    public static final String TABLE_NAME = "tuning_job_execution_param_set";
+    public static final String jobSuggestedParamSet = "jobSuggestedParamSet";
+    public static final String jobExecution = "jobExecution";
+    public static final String tuningEnabled = "tuningEnabled";
     public static final String createdTs = "createdTs";
     public static final String updatedTs = "updatedTs";
   }
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  public Integer id;
+  @OneToOne(cascade = CascadeType.ALL)
+  @JoinTable(name = "job_suggested_param_set", joinColumns = {@JoinColumn(name = "job_suggested_param_set_id", referencedColumnName = "id")})
+  public JobSuggestedParamSet jobSuggestedParamSet;
 
-  @Column(nullable = false)
-  public String flowExecId;
+  @OneToOne(cascade = CascadeType.ALL)
+  @JoinTable(name = "job_execution", joinColumns = {@JoinColumn(name = "job_execution_id", referencedColumnName = "id")})
+  public JobExecution jobExecution;
 
-  @Column(nullable = false)
-  public String flowExecUrl;
-
-  @Column(nullable = false)
-  @ManyToOne(cascade = CascadeType.ALL)
-  @JoinTable(name = "flow_definition", joinColumns = {@JoinColumn(name = "flow_definition_id", referencedColumnName = "id")})
-  public FlowDefinition flowDefinition;
+  public Boolean tuningEnabled;
 
   @Column(nullable = false)
   public Timestamp createdTs;
@@ -70,8 +58,8 @@ public class FlowExecution extends Model {
   @UpdatedTimestamp
   public Timestamp updatedTs;
 
-  public static Model.Finder<Integer, FlowExecution> find =
-      new Model.Finder<Integer, FlowExecution>(Integer.class, FlowExecution.class);
+  public static Finder<Long, TuningJobExecutionParamSet> find =
+      new Finder<Long, TuningJobExecutionParamSet>(Long.class, TuningJobExecutionParamSet.class);
 
   @Override
   public void save() {

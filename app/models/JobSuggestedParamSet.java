@@ -16,70 +16,83 @@
 
 package models;
 
+import com.avaje.ebean.annotation.UpdatedTimestamp;
 import java.sql.Timestamp;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
-
-import com.avaje.ebean.annotation.UpdatedTimestamp;
 
 import play.db.ebean.Model;
 
 
 @Entity
-@Table(name = "tuning_parameter")
-public class TuningParameter extends Model {
+@Table(name = "job_suggested_param_set")
+public class JobSuggestedParamSet extends Model {
 
-  private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = -294471313051608818L;
 
-  public enum ParamValueType {
-    INT, FLOAT, DOUBLE, BOOLEAN
+  public enum ParamSetStatus {
+    CREATED, SENT, EXECUTED, FITNESS_COMPUTED, DISCARDED
   }
 
   public static class TABLE {
-    public static final String TABLE_NAME = "tuning_parameter";
+    public static final String TABLE_NAME = "job_suggested_param_set";
     public static final String id = "id";
-    public static final String paramName = "paramName";
-    public static final String defaultValue = "defaultValue";
-    public static final String minValue = "minValue";
-    public static final String maxValue = "maxValue";
-    public static final String stepSize = "stepSize";
+    public static final String jobDefinition = "jobDefinition";
     public static final String tuningAlgorithm = "tuningAlgorithm";
-    public static final String isDerived = "isDerived";
+    public static final String paramSetState = "paramSetState";
+    public static final String isParamSetDefault = "isParamSetDefault";
+    public static final String fitness = "fitness";
+    public static final String fitnessJobExecution = "fitnessJobExecution";
+    public static final String isParamSetBest = "isParamSetBest";
+    public static final String areConstraintsViolated = "areConstraintsViolated";
     public static final String createdTs = "createdTs";
     public static final String updatedTs = "updatedTs";
+
   }
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  public Integer id;
+  public Long id;
 
   @Column(nullable = false)
-  public String paramName;
+  @OneToOne(cascade = CascadeType.ALL)
+  @JoinTable(name = "job_definition", joinColumns = {@JoinColumn(name = "job_definition_id", referencedColumnName = "id")})
+  public JobDefinition jobDefinition;
 
+  @OneToOne(cascade = CascadeType.ALL)
+  @JoinTable(name = "job_execution", joinColumns = {@JoinColumn(name = "fitness_job_execution_id", referencedColumnName = "id")})
+  public JobExecution fitnessJobExecution;
+
+  @Column(nullable = false)
   @ManyToOne(cascade = CascadeType.ALL)
   @JoinTable(name = "tuning_algorithm", joinColumns = {@JoinColumn(name = "tuning_algorithm_id", referencedColumnName = "id")})
   public TuningAlgorithm tuningAlgorithm;
 
-  @Column(nullable = false)
-  public Double defaultValue;
+
+  @Enumerated(EnumType.STRING)
+  public ParamSetStatus paramSetState;
 
   @Column(nullable = false)
-  public Double minValue;
+  public Boolean isParamSetDefault;
+
+  public Double fitness;
 
   @Column(nullable = false)
-  public Double maxValue;
+  public Boolean isParamSetBest;
 
   @Column(nullable = false)
-  public Double stepSize;
+  public Boolean areConstraintsViolated;
 
   @Column(nullable = false)
   public Timestamp createdTs;
@@ -88,11 +101,8 @@ public class TuningParameter extends Model {
   @UpdatedTimestamp
   public Timestamp updatedTs;
 
-  @Column(nullable = false)
-  public Integer isDerived;
-
-  public static Finder<Integer, TuningParameter> find =
-      new Finder<Integer, TuningParameter>(Integer.class, TuningParameter.class);
+  public static Model.Finder<Long, JobSuggestedParamSet> find =
+      new Model.Finder<Long, JobSuggestedParamSet>(Long.class, JobSuggestedParamSet.class);
 
   @Override
   public void save() {
