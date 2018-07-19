@@ -18,6 +18,7 @@ package models;
 
 import java.sql.Timestamp;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -25,6 +26,9 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import com.avaje.ebean.annotation.UpdatedTimestamp;
@@ -33,48 +37,49 @@ import play.db.ebean.Model;
 
 
 @Entity
-@Table(name = "tuning_algorithm")
-public class TuningAlgorithm extends Model {
+@Table(name = "tuning_parameter_constraint")
+public class TuningParameterConstraint extends Model {
 
   private static final long serialVersionUID = 1L;
 
-  public enum JobType {
-    PIG, HIVE, SPARK
-  }
-
-  public enum OptimizationAlgo {
-    PSO, PSO_IPSO
-  }
-
-  public enum OptimizationMetric {
-    RESOURCE, EXECUTION_TIME
+  public enum ConstraintType {
+    BOUNDARY, INTERDEPENDENT
   }
 
   public static class TABLE {
-    public static final String TABLE_NAME = "tuning_algorithm";
+    public static final String TABLE_NAME = "tuning_parameter_constraint";
     public static final String id = "id";
-    public static final String jobType = "jobType";
-    public static final String optimizationAlgo = "optimizationAlgo";
-    public static final String optimizationAlgoVersion = "optimizationAlgoVersion";
-    public static final String optimizationMetric = "optimizationMetric";
+    public static final String jobDefinitionId = "jobDefinitionId";
+    public static final String constraintType = "constraintType";
+    public static final String tuningParameterId = "tuningParameterId";
+    public static final String lowerBound = "lowerBound";
+    public static final String upperBound = "upperBound";
     public static final String createdTs = "createdTs";
     public static final String updatedTs = "updatedTs";
+    public static final String paramName = "paramName";
   }
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   public Integer id;
 
-  @Enumerated(EnumType.STRING)
-  public JobType jobType;
+  @ManyToOne(cascade = CascadeType.ALL)
+  @JoinTable(name = "job_definition", joinColumns = {@JoinColumn(name = "job_definition_id", referencedColumnName = "id")})
+  public JobDefinition jobDefinition;
 
   @Enumerated(EnumType.STRING)
-  public OptimizationAlgo optimizationAlgo;
+  @Column(nullable = false)
+  public ConstraintType constraintType;
 
-  public Integer optimizationAlgoVersion;
+  @ManyToOne(cascade = CascadeType.ALL)
+  @JoinTable(name = "tuning_parameter", joinColumns = {@JoinColumn(name = "tuning_parameter_id", referencedColumnName = "id")})
+  public TuningParameter tuningParameter;
 
-  @Enumerated(EnumType.STRING)
-  public OptimizationMetric optimizationMetric;
+  @Column(nullable = false)
+  public Double lowerBound;
+
+  @Column(nullable = false)
+  public Double upperBound;
 
   @Column(nullable = false)
   public Timestamp createdTs;
@@ -83,8 +88,11 @@ public class TuningAlgorithm extends Model {
   @UpdatedTimestamp
   public Timestamp updatedTs;
 
-  public static Finder<Integer, TuningAlgorithm> find =
-      new Finder<Integer, TuningAlgorithm>(Integer.class, TuningAlgorithm.class);
+  @Column(nullable = false)
+  public String paramName;
+
+  public static Finder<Integer, TuningParameterConstraint> find =
+      new Finder<Integer, TuningParameterConstraint>(Integer.class, TuningParameterConstraint.class);
 
   @Override
   public void save() {

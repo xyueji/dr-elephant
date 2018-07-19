@@ -44,6 +44,7 @@ import java.util.TreeSet;
 import models.AppHeuristicResult;
 import models.AppResult;
 
+import models.TuningAlgorithm;
 import org.apache.commons.collections.map.ListOrderedMap;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
@@ -928,7 +929,7 @@ public class Application extends Controller {
         skipExecutionForOptimization = Boolean.parseBoolean(paramValueMap.get("skipExecutionForOptimization"));
       }
       String jobType = paramValueMap.get("autoTuningJobType");
-      String optimizationAlgo = paramValueMap.get("optimizationAlgo");
+      String optimizationAlgo = paramValueMap.get("optimizationAlgo")==null ? TuningAlgorithm.OptimizationAlgo.PSO.name() : paramValueMap.get("optimizationAlgo") ;
       String optimizationAlgoVersion = paramValueMap.get("optimizationAlgoVersion");
       String optimizationMetric = paramValueMap.get("optimizationMetric");
 
