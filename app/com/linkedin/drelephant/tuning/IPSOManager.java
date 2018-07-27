@@ -73,7 +73,7 @@ public class IPSOManager implements AutoTuningOptimizeManager {
   }
 
   @Override
-  public void extractParameterInformation(List<AppResult> appResults) {
+  public Map<String, Map<String, Double>> extractParameterInformation(List<AppResult> appResults) {
     logger.info(" Extract Parameter Information");
     usageDataGlobal = new HashMap<String, Map<String, Double>>();
     intialize();
@@ -90,6 +90,7 @@ public class IPSOManager implements AutoTuningOptimizeManager {
     }
     logger.debug("Usage Values Global ");
     printInformation(usageDataGlobal);
+    return usageDataGlobal;
   }
 
   private void intialize() {

@@ -30,7 +30,7 @@ public class ConfigurationHeuristicTest extends TestCase {
           paramMap));
 
   @Test
-  public void testRuntimeCritical() throws IOException {
+  public void testConfigurations() throws IOException {
     List<HeuristicResultDetails> results = analyzeJob().getHeuristicResultDetails();
     assertTrue(
         results.get(0).getName().equals(CommonConstantsHeuristic.ParameterKeys.MAPPER_MEMORY_HEURISTICS_CONF.getValue())
@@ -38,9 +38,11 @@ public class ConfigurationHeuristicTest extends TestCase {
     assertTrue(
         results.get(1).getName().equals(CommonConstantsHeuristic.ParameterKeys.MAPPER_HEAP_HEURISTICS_CONF.getValue())
             && results.get(1).getValue().equals("1536"));
-    assertTrue(
-        results.get(2).getName().equals(CommonConstantsHeuristic.ParameterKeys.REDUCER_MEMORY_HEURISTICS_CONF.getValue())
-            && results.get(2).getValue().equals("3072"));
+    assertTrue(results.get(2)
+        .getName()
+        .equals(CommonConstantsHeuristic.ParameterKeys.REDUCER_MEMORY_HEURISTICS_CONF.getValue()) && results.get(2)
+        .getValue()
+        .equals("3072"));
     assertTrue(
         results.get(3).getName().equals(CommonConstantsHeuristic.ParameterKeys.REDUCER_HEAP_HEURISTICS_CONF.getValue())
             && results.get(3).getValue().equals("2536"));

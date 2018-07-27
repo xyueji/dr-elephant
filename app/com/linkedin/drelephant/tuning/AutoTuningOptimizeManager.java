@@ -17,6 +17,7 @@
 package com.linkedin.drelephant.tuning;
 
 import java.util.List;
+import java.util.Map;
 import models.AppResult;
 import models.JobDefinition;
 import models.JobSuggestedParamSet;
@@ -39,7 +40,7 @@ public interface AutoTuningOptimizeManager {
     Extract parameter Information of previous executions
     calls after each exectuion of flow
    */
-  public void extractParameterInformation(List<AppResult> appResults);
+  public Map<String, Map<String, Double>> extractParameterInformation(List<AppResult> appResults);
 
   /*
     Optimize search space
