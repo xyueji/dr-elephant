@@ -56,7 +56,6 @@ public class TuningParameterConstraint extends Model {
     public static final String upperBound = "upperBound";
     public static final String createdTs = "createdTs";
     public static final String updatedTs = "updatedTs";
-    public static final String paramName = "paramName";
   }
 
   @Id
@@ -88,8 +87,6 @@ public class TuningParameterConstraint extends Model {
   @UpdatedTimestamp
   public Timestamp updatedTs;
 
-  @Column(nullable = false)
-  public String paramName;
 
   public static Finder<Integer, TuningParameterConstraint> find =
       new Finder<Integer, TuningParameterConstraint>(Integer.class, TuningParameterConstraint.class);

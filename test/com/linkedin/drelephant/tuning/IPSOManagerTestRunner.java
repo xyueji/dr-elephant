@@ -59,7 +59,7 @@ public class IPSOManagerTestRunner implements Runnable {
     optimizeManager.intializePrerequisite(tuningAlgorithm, jobSuggestedParamSet);
     List<TuningParameterConstraint> tuningParameterConstraint =
         TuningParameterConstraint.find.where().eq("job_definition_id", 100003).findList();
-    assertTrue(" Parameters Constraint Size ", tuningParameterConstraint.size() == 9);
+    assertTrue(" Parameters Constraint Size ", tuningParameterConstraint.size() == 7);
   }
 
   private void testIPSOExtractParameterInformation(JobExecution jobExecution,
@@ -108,12 +108,12 @@ public class IPSOManagerTestRunner implements Runnable {
   }
 
   private void testMapParameterBoundries(TuningParameterConstraint parameterConstraint) {
-    if (parameterConstraint.paramName.equals(
+    if (parameterConstraint.tuningParameter.paramName.equals(
         CommonConstantsHeuristic.ParameterKeys.MAPPER_MEMORY_HADOOP_CONF.getValue())) {
       assertTrue("Mapper Memory Lower Bound ", parameterConstraint.lowerBound == 2048.0);
       assertTrue("Mapper Memory Upper Bound ", parameterConstraint.upperBound == 2048.0);
     }
-    if (parameterConstraint.paramName.equals(
+    if (parameterConstraint.tuningParameter.paramName.equals(
         CommonConstantsHeuristic.ParameterKeys.MAPPER_HEAP_HADOOP_CONF.getValue())) {
       assertTrue("Mapper Heap Memory Lower Bound ", parameterConstraint.lowerBound == 427.0);
       assertTrue("Mapper Heap Memory Upper Bound ", parameterConstraint.upperBound == 512.4);
@@ -121,12 +121,12 @@ public class IPSOManagerTestRunner implements Runnable {
   }
 
   private void testReduceParameterBoundries(TuningParameterConstraint parameterConstraint) {
-    if (parameterConstraint.paramName.equals(
+    if (parameterConstraint.tuningParameter.paramName.equals(
         CommonConstantsHeuristic.ParameterKeys.REDUCER_MEMORY_HADOOP_CONF.getValue())) {
       assertTrue("Mapper Memory Lower Bound ", parameterConstraint.lowerBound == 1024.0);
       assertTrue("Mapper Memory Upper Bound ", parameterConstraint.upperBound == 2048.0);
     }
-    if (parameterConstraint.paramName.equals(
+    if (parameterConstraint.tuningParameter.paramName.equals(
         CommonConstantsHeuristic.ParameterKeys.REDUCER_HEAP_HADOOP_CONF.getValue())) {
       assertTrue("Reducer Heap Memory Lower Bound ", parameterConstraint.lowerBound == 300.0);
       assertTrue("Reducer Heap Memory Upper Bound ", parameterConstraint.upperBound == 360.0);
@@ -183,7 +183,7 @@ public class IPSOManagerTestRunner implements Runnable {
     jobSuggestedParamValue.tuningParameter = TuningParameter.find.byId(11);
     jobSuggestedParamValue.paramValue = 2048.0;
     JobSuggestedParamValue jobSuggestedParamValue1 = new JobSuggestedParamValue();
-    jobSuggestedParamValue1.tuningParameter = TuningParameter.find.byId(17);
+    jobSuggestedParamValue1.tuningParameter = TuningParameter.find.byId(16);
     jobSuggestedParamValue1.paramValue = 2048.0;
     List<JobSuggestedParamValue> jobSuggestedParamValueList = new ArrayList<JobSuggestedParamValue>();
     jobSuggestedParamValueList.add(jobSuggestedParamValue);

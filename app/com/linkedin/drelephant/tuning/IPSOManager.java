@@ -67,7 +67,6 @@ public class IPSOManager implements AutoTuningOptimizeManager {
       tuningParameterConstraint.lowerBound = tuningParameter.minValue;
       tuningParameterConstraint.upperBound = tuningParameter.maxValue;
       tuningParameterConstraint.constraintType = TuningParameterConstraint.ConstraintType.BOUNDARY;
-      tuningParameterConstraint.paramName = tuningParameter.paramName;
       tuningParameterConstraint.save();
     }
   }
@@ -170,18 +169,18 @@ public class IPSOManager implements AutoTuningOptimizeManager {
     Map<String, TuningParameterConstraint> memoryConstraints = new HashMap<String, TuningParameterConstraint>();
     for (TuningParameterConstraint parameterConstraint : parameterConstraints) {
       if (functionType.equals("map")) {
-        if (parameterConstraint.paramName.equals(ParameterKeys.MAPPER_MEMORY_HADOOP_CONF.getValue())) {
+        if (parameterConstraint.tuningParameter.paramName.equals(ParameterKeys.MAPPER_MEMORY_HADOOP_CONF.getValue())) {
           memoryConstraints.put("CONTAINER_MEMORY", parameterConstraint);
         }
-        if (parameterConstraint.paramName.equals(ParameterKeys.MAPPER_HEAP_HADOOP_CONF.getValue())) {
+        if (parameterConstraint.tuningParameter.paramName.equals(ParameterKeys.MAPPER_HEAP_HADOOP_CONF.getValue())) {
           memoryConstraints.put("CONTAINER_HEAP", parameterConstraint);
         }
       }
       if (functionType.equals("reduce")) {
-        if (parameterConstraint.paramName.equals(ParameterKeys.REDUCER_MEMORY_HADOOP_CONF.getValue())) {
+        if (parameterConstraint.tuningParameter.paramName.equals(ParameterKeys.REDUCER_MEMORY_HADOOP_CONF.getValue())) {
           memoryConstraints.put("CONTAINER_MEMORY", parameterConstraint);
         }
-        if (parameterConstraint.paramName.equals(ParameterKeys.REDUCER_HEAP_HADOOP_CONF.getValue())) {
+        if (parameterConstraint.tuningParameter.paramName.equals(ParameterKeys.REDUCER_HEAP_HADOOP_CONF.getValue())) {
           memoryConstraints.put("CONTAINER_HEAP", parameterConstraint);
         }
       }

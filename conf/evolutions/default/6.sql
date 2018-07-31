@@ -30,10 +30,8 @@ INSERT INTO tuning_parameter VALUES (11,'mapreduce.map.memory.mb',3,2048,1024,81
 INSERT INTO tuning_parameter VALUES (12,'mapreduce.task.io.sort.factor',3,10,10,150,10 ,0, current_timestamp(0), current_timestamp(0));
 INSERT INTO tuning_parameter VALUES (13,'mapreduce.map.sort.spill.percent',3,0.8,0.6,0.9,0.1, 0, current_timestamp(0), current_timestamp(0));
 INSERT INTO tuning_parameter VALUES (14,'mapreduce.reduce.memory.mb',3,2048,1024,8192,1024, 0, current_timestamp(0), current_timestamp(0));
-INSERT INTO tuning_parameter VALUES (15,'pig.maxCombinedSplitSize',3,536870912,536870912,536870912,128, 0, current_timestamp(0), current_timestamp(0));
-INSERT INTO tuning_parameter VALUES (16,'mapreduce.reduce.java.opts',3,1536,500,6144,64, 0, current_timestamp(0), current_timestamp(0));
-INSERT INTO tuning_parameter VALUES (17,'mapreduce.map.java.opts',3,1536,500,6144,64, 0, current_timestamp(0), current_timestamp(0));
-INSERT INTO tuning_parameter VALUES (18,'mapreduce.input.fileinputformat.split.maxsize',3,536870912,536870912,536870912,128, 1, current_timestamp(0), current_timestamp(0));
+INSERT INTO tuning_parameter VALUES (15,'mapreduce.reduce.java.opts',3,1536,500,6144,64, 0, current_timestamp(0), current_timestamp(0));
+INSERT INTO tuning_parameter VALUES (16,'mapreduce.map.java.opts',3,1536,500,6144,64, 0, current_timestamp(0), current_timestamp(0));
 
 
 CREATE TABLE IF NOT EXISTS tuning_parameter_constraint (
@@ -43,7 +41,6 @@ CREATE TABLE IF NOT EXISTS tuning_parameter_constraint (
   constraint_type enum('BOUNDARY','INTERDEPENDENT') NOT NULL COMMENT 'Constraint ID',
   lower_bound double COMMENT 'Lower bound of parameter',
   upper_bound double COMMENT 'Upper bound of parameter',
-  param_name varchar(100) NOT NULL COMMENT 'name of the hadoop parameter e.g. mapreduce.task.io.sort.mb ',
   created_ts timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_ts timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
@@ -51,7 +48,7 @@ CREATE TABLE IF NOT EXISTS tuning_parameter_constraint (
   CONSTRAINT tuning_parameter_constraint_ibfk_2 FOREIGN KEY (tuning_parameter_id) REFERENCES tuning_parameter (id)
 ) ENGINE=InnoDB;
 
-create index index_tuning_parameter_constraint on tuning_parameter_constraint (tuning_parameter_id);
+create index index_tuning_parameter_constraint on tuning_parameter_constraint (job_definition_id);
 
 # --- !Downs
 DELETE FROM tuning_parameter WHERE tuning_algorithm_id=3;
