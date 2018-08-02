@@ -23,6 +23,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import models.JobDefinition;
+import models.JobSuggestedParamSet;
+import models.TuningAlgorithm;
+import models.TuningJobDefinition;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
 import play.libs.Json;
@@ -43,6 +47,7 @@ public class PSOParamGenerator extends ParamGenerator {
 
   public PSOParamGenerator() {
     Configuration configuration = ElephantContext.instance().getAutoTuningConf();
+
     PYTHON_PATH = configuration.get(PYTHON_PATH_CONF);
     if (PYTHON_PATH == null) {
       PYTHON_PATH = System.getenv(PYTHON_PATH_ENV_VARIABLE);
@@ -79,12 +84,23 @@ public class PSOParamGenerator extends ParamGenerator {
     stringTunerState = stringTunerState.replaceAll("\\s+", "");
     String jobType = jobTuningInfo.getJobType().toString();
 
-    List<String> error = new ArrayList<String>();
+    logger.info(" ID " + jobTuningInfo.getTuningJob().id);
+    TuningJobDefinition tuningJobDefinition = TuningJobDefinition.find.select("*")
+        .fetch(TuningJobDefinition.TABLE.job, "*")
+        .where()
+        .eq(TuningJobDefinition.TABLE.job + "." + JobDefinition.TABLE.id, jobTuningInfo.getTuningJob().id)
+        .eq(TuningJobDefinition.TABLE.tuningEnabled, 1)
+        .findUnique();
 
+    int swarmSize = getSwarmSize(tuningJobDefinition.tuningAlgorithm);
+
+    List<String> error = new ArrayList<String>();
+    logger.debug("String State " + stringTunerState);
     try {
+
       Process p = Runtime.getRuntime()
-          .exec(
-              PYTHON_PATH + " " + TUNING_SCRIPT_PATH + " " + stringTunerState + " " + parametersToTune + " " + jobType);
+          .exec(PYTHON_PATH + " " + TUNING_SCRIPT_PATH + " " + stringTunerState + " " + parametersToTune + " " + jobType
+              + " " + swarmSize);
       BufferedReader inputStream = new BufferedReader(new InputStreamReader(p.getInputStream()));
       BufferedReader errorStream = new BufferedReader(new InputStreamReader(p.getErrorStream()));
       String updatedStringTunerState = inputStream.readLine();
@@ -100,5 +116,13 @@ public class PSOParamGenerator extends ParamGenerator {
       logger.error("Error in generateParamSet()", e);
     }
     return newJobTuningInfo;
+  }
+
+  private int getSwarmSize(TuningAlgorithm tuningAlgorithm) {
+    AutoTuningOptimizeManager optimizeManager = OptimizationAlgoFactory.getOptimizationAlogrithm(tuningAlgorithm);
+    if (optimizeManager != null) {
+      return optimizeManager.getSwarmSize();
+    }
+    return 3;
   }
 }
