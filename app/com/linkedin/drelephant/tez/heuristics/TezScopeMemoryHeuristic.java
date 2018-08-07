@@ -28,18 +28,17 @@ import org.apache.log4j.Logger;
 /**
  * Analyzes mapper memory allocation and requirements
  */
-public class MapperMemoryHeuristic extends GenericMemoryHeuristic {
+public class TezScopeMemoryHeuristic extends GenericMemoryHeuristic {
 
   private static final Logger logger = Logger.getLogger(MapperMemoryHeuristic.class);
-  public static final String MAPRED_MAPPER_MEMORY_CONF = "mapreduce.map.memory.mb";
-
-  public MapperMemoryHeuristic(HeuristicConfigurationData __heuristicConfData) {
-    super(MAPRED_MAPPER_MEMORY_CONF, __heuristicConfData);
+  public static final String TEZ_AM_MEMORY_CONF = "tez.am.resource.memory.mb";
+  public TezScopeMemoryHeuristic(HeuristicConfigurationData __heuristicConfData) {
+    super(TEZ_AM_MEMORY_CONF, __heuristicConfData);
   }
 
   @Override
   protected TezTaskData[] getTasks(TezApplicationData data) {
-    return data.getMapTaskData();
+    return data.getScopeTasks();
   }
 
 

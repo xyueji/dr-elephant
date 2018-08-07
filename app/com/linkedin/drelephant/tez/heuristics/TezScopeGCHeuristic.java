@@ -16,31 +16,36 @@
  */
 package com.linkedin.drelephant.tez.heuristics;
 
+
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData;
-
 import com.linkedin.drelephant.tez.data.TezApplicationData;
-
+import com.linkedin.drelephant.tez.data.TezCounterData;
 import com.linkedin.drelephant.tez.data.TezTaskData;
-
+import com.linkedin.drelephant.util.Utils;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import com.linkedin.drelephant.analysis.Heuristic;
+import com.linkedin.drelephant.analysis.HeuristicResult;
+import com.linkedin.drelephant.analysis.Severity;
+import com.linkedin.drelephant.math.Statistics;
+import java.util.Map;
 import org.apache.log4j.Logger;
 
 
 /**
- * Analyzes mapper memory allocation and requirements
+ * Analyses garbage collection efficiency
  */
-public class MapperMemoryHeuristic extends GenericMemoryHeuristic {
+public class TezScopeGCHeuristic extends GenericGCHeuristic {
+  private static final Logger logger = Logger.getLogger(MapperGCHeuristic.class);
 
-  private static final Logger logger = Logger.getLogger(MapperMemoryHeuristic.class);
-  public static final String MAPRED_MAPPER_MEMORY_CONF = "mapreduce.map.memory.mb";
-
-  public MapperMemoryHeuristic(HeuristicConfigurationData __heuristicConfData) {
-    super(MAPRED_MAPPER_MEMORY_CONF, __heuristicConfData);
+  public TezScopeGCHeuristic(HeuristicConfigurationData heuristicConfData) {
+    super(heuristicConfData);
   }
 
   @Override
   protected TezTaskData[] getTasks(TezApplicationData data) {
-    return data.getMapTaskData();
+    return data.getScopeTasks();
   }
-
 
 }
