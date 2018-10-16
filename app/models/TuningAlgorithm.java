@@ -43,7 +43,7 @@ public class TuningAlgorithm extends Model {
   }
 
   public enum OptimizationAlgo {
-    PSO, PSO_IPSO
+    PSO
   }
 
   public enum OptimizationMetric {
