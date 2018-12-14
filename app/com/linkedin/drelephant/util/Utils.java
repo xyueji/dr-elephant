@@ -58,6 +58,8 @@ public final class Utils {
   private static final Logger logger = Logger.getLogger(Utils.class);
 
   private static final String TRUNCATE_SUFFIX = "...";
+  /** Milliseconds in one day. */
+  private static final long MILLIS_ONE_DAY = 86400000L;
 
   private Utils() {
     // do nothing
@@ -71,6 +73,16 @@ public final class Utils {
    */
   public static String getJobIdFromApplicationId(String appId) {
     return appId.replaceAll("application", "job");
+  }
+
+  /**
+   * Given a mapreduce job's job id, get its corresponding YARN application id.
+   *
+   * @param jobId The job id of the job
+   * @return the corresponding application id
+   */
+  public static String getApplicationIdFromJobId(String jobId) {
+    return jobId.replaceAll("job", "application");
   }
 
   /**
@@ -568,5 +580,29 @@ public final class Utils {
       datasets.add(element);
     }
     return datasets;
+  }
+
+  /**
+   * Returns the timestamp of that day's start timestamp (that is midnight 00:00:00 AM) for a given input timestamp.
+   * For instance, if the supplied timestamp is 100000, this method would return 86400, which corresponds to
+   * 2 January 1970, 00:00:00 GMT.
+   *
+   * @param ts Timestamp for which top of the day timestamp is to be found.
+   * @return Timestamp of that day's beginning (midnight)
+   */
+  public static long getTopOfTheDayTimestamp(long ts) {
+    return (ts - (ts % MILLIS_ONE_DAY));
+  }
+
+  /**
+   * Returns the timestamp of next day's start timestamp (that is midnight 00:00:00 AM) for a given input timestamp.
+   * For instance, if the supplied timestamp is 100000, this method would return 172800, which corresponds to
+   * 3 January 1970, 00:00:00 GMT.
+   *
+   * @param ts Timestamp for which next top of the day timestamp is to be found.
+   * @return Timestamp of next day's beginning (midnight)
+   */
+  public static long getNextTopOfTheDayTimestamp(long ts) {
+    return (getTopOfTheDayTimestamp(ts) + MILLIS_ONE_DAY);
   }
 }

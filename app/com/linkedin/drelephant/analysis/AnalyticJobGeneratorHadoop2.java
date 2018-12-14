@@ -24,6 +24,7 @@ import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import models.AppResult;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
@@ -91,7 +92,7 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
           } catch (AuthenticationException e) {
             logger.info("Error fetching resource manager " + id + " state " + e.getMessage());
           } catch (IOException e) {
-            logger.info("Error fetching Json for resource manager "+ id + " status " + e.getMessage());
+            logger.info("Error fetching Json for resource manager " + id + " status " + e.getMessage());
           }
         }
       }
@@ -100,9 +101,18 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
     }
     if (_resourceManagerAddress == null) {
       throw new RuntimeException(
-              "Cannot get YARN resource manager address from Hadoop Configuration property: [" + RESOURCE_MANAGER_ADDRESS
-                      + "].");
+          "Cannot get YARN resource manager address from Hadoop Configuration property: [" + RESOURCE_MANAGER_ADDRESS + "].");
     }
+  }
+
+  @Override
+  public String getEffectiveResourceManagerAddress() {
+    return _resourceManagerAddress;
+  }
+
+  @Override
+  public long getFetchStartTime() {
+    return _fetchStartTime;
   }
 
   @Override
@@ -119,9 +129,9 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
   }
 
   /**
-   *  Fetch all the succeeded and failed applications/analytic jobs from the resource manager.
+   * Fetch all the succeeded and failed applications/analytic jobs from the resource manager.
    *
-   * @return
+   * @return a list of {@link AnalyticJob} objects based on applications fetched from RM.
    * @throws IOException
    * @throws AuthenticationException
    */
@@ -238,7 +248,7 @@ public class AnalyticJobGeneratorHadoop2 implements AnalyticJobGenerator {
         String user = app.get("user").getValueAsText();
         String name = app.get("name").getValueAsText();
         String queueName = app.get("queue").getValueAsText();
-        String trackingUrl = app.get("trackingUrl") != null? app.get("trackingUrl").getValueAsText() : null;
+        String trackingUrl = app.get("trackingUrl") != null ? app.get("trackingUrl").getValueAsText() : null;
         long startTime = app.get("startedTime").getLongValue();
         long finishTime = app.get("finishedTime").getLongValue();
 
