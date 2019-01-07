@@ -15,4 +15,7 @@ script:
 branches:
   only:
     - master
+    
+env:
+  - PSO_DIR_PATH=$TRAVIS_BUILD_DIR/scripts/pso/
 
