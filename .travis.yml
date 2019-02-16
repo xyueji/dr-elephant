@@ -11,10 +11,11 @@ install:
 script:
   - ./travis.sh
 
-# only build PRs and master (not all branch pushes)
+# only build PRs plus branches master and customSHSWork (not all branch pushes)
 branches:
   only:
     - master
+    - customSHSWork
     
 env:
   - PSO_DIR_PATH=$TRAVIS_BUILD_DIR/scripts/pso/
