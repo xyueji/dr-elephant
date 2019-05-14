@@ -427,7 +427,7 @@ if [ $run_StyleChecks = "y" ]; then
 fi
 
 set -v
-set -x
+set -ex
 # Echo the value of pwd in the script so that it is clear what is being removed.
 rm -rf ${project_root}/dist
 mkdir dist
@@ -436,8 +436,8 @@ play_command $OPTS dist
 
 cd target/universal
 
-ZIP_NAME=`/bin/ls *.zip`
-unzip ${ZIP_NAME}
+ZIP_NAME=`ls *.zip`
+unzip -o ${ZIP_NAME}
 rm ${ZIP_NAME}
 DIST_NAME=${ZIP_NAME%.zip}
 
@@ -452,7 +452,7 @@ cp $stop_script ${DIST_NAME}/bin/
 
 cp -r $app_conf ${DIST_NAME}
 
-mkdir ${DIST_NAME}/scripts/
+mkdir -p ${DIST_NAME}/scripts/
 
 cp -r $pso_dir ${DIST_NAME}/scripts/
 

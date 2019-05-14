@@ -44,4 +44,8 @@
       <allocated_memory_waste_buffer_percentage>0.5</allocated_memory_waste_buffer_percentage>
     </params>
   </aggregator>
+  <aggregator>
+    <applicationtype>tony</applicationtype>
+    <classname>com.linkedin.drelephant.tony.TonyMetricsAggregator</classname>
+  </aggregator>
 </aggregators>

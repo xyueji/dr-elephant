@@ -116,4 +116,13 @@
     </params>
   </fetcher>
   -->
+
+  <!--
+    Fetcher for TonY jobs. To use this, you must set the TONY_CONF_DIR environment variable to the directory
+    containing the tony-site.xml file.
+  -->
+  <!--fetcher>
+    <applicationtype>tony</applicationtype>
+    <classname>com.linkedin.drelephant.tony.fetchers.TonyFetcher</classname>
+  </fetcher-->
 </fetchers>

@@ -354,4 +354,20 @@
     <viewname>views.html.help.spark.helpExecutorGcHeuristic</viewname>
   </heuristic>
 
+
+  <!-- TONY HEURISTICS -->
+  <heuristic>
+    <applicationtype>tony</applicationtype>
+    <heuristicname>Task Memory</heuristicname>
+    <classname>com.linkedin.drelephant.tony.heuristics.TaskMemoryHeuristic</classname>
+    <viewname>views.html.help.tony.helpTaskMemory</viewname>
+    <params>
+      <!-- 2048 is the default set in TaskMemoryHeuristic -->
+      <!--container_memory_default_mb>2048</container_memory_default_mb-->
+      <!-- These are the default max memory limits defiend in TaskMemoryHeuristic -->
+      <!--task_memory_thresholds>0.8, 0.7, 0.6, 0.5</task_memory_thresholds-->
+    </params>
+  </heuristic>
+  <!-- END TONY HEURISTICS -->
+
 </heuristics>
