@@ -17,7 +17,6 @@ package com.linkedin.drelephant.tony.data;
 
 import com.linkedin.drelephant.analysis.ApplicationType;
 import com.linkedin.drelephant.analysis.HadoopApplicationData;
-import com.linkedin.tony.events.ApplicationFinished;
 import com.linkedin.tony.events.Event;
 import com.linkedin.tony.events.EventType;
 import com.linkedin.tony.events.TaskFinished;
