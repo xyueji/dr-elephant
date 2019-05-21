@@ -35,7 +35,7 @@ public class TonyUtils {
     for (TonyTaskData taskData : taskMap.get(taskType).values()) {
       List<Metric> metrics = taskData.getMetrics();
       if (metrics == null) {
-        break;
+        continue;
       }
       for (Metric metric : metrics) {
         if (metric.getName().equals(Constants.MAX_MEMORY_BYTES)) {
