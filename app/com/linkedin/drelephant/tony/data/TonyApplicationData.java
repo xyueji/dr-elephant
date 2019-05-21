@@ -103,6 +103,7 @@ public class TonyApplicationData implements HadoopApplicationData {
   }
 
   private void processEvents(List<Event> events) {
+    long appFinishedTime = 0;
     for (Event event : events) {
       if (event.getType().equals(EventType.TASK_STARTED)) {
         TaskStarted taskStartedEvent = (TaskStarted) event.getEvent();
@@ -117,6 +118,19 @@ public class TonyApplicationData implements HadoopApplicationData {
         initTaskMap(taskType, taskIndex);
         _taskMap.get(taskType).get(taskIndex).setTaskEndTime(event.getTimestamp());
         _taskMap.get(taskType).get(taskIndex).setMetrics(taskFinishedEvent.getMetrics());
+      } else if (event.getType().equals(EventType.APPLICATION_FINISHED)) {
+        appFinishedTime = event.getTimestamp();
+      }
+    }
+
+    // Set end time for any tasks that don't have end times to application finish time
+    if (appFinishedTime > 0) {
+      for (Map<Integer, TonyTaskData> taskDataMap : _taskMap.values()) {
+        for (TonyTaskData taskData : taskDataMap.values()) {
+          if (taskData.getTaskEndTime() == 0) {
+            taskData.setTaskEndTime(appFinishedTime);
+          }
+        }
       }
     }
   }
