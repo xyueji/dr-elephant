@@ -34,6 +34,7 @@ import org.apache.log4j.Logger;
 
 public class TonyFetcher implements ElephantFetcher<TonyApplicationData> {
   private static final Logger _LOGGER = Logger.getLogger(TonyFetcher.class);
+  private final Path _intermediateDir;
   private final Path _finishedDir;
   private final FileSystem _fs;
 
@@ -52,6 +53,7 @@ public class TonyFetcher implements ElephantFetcher<TonyApplicationData> {
     _LOGGER.info("Using TonY conf dir: " + tonyConfDir);
 
     conf.addResource(new Path(tonyConfDir + Path.SEPARATOR + Constants.TONY_SITE_CONF));
+    _intermediateDir = new Path(conf.get(TonyConfigurationKeys.TONY_HISTORY_INTERMEDIATE));
     _finishedDir = new Path(conf.get(TonyConfigurationKeys.TONY_HISTORY_FINISHED));
     _fs = _finishedDir.getFileSystem(conf);
   }
@@ -69,6 +71,11 @@ public class TonyFetcher implements ElephantFetcher<TonyApplicationData> {
     // In case we don't find the history files in yyyy/MM/dd, we should check the previous day as well.
     String yearMonthDay = ParserUtils.getYearMonthDayDirectory(date);
     Path jobDir = new Path(_finishedDir, yearMonthDay + Path.SEPARATOR + job.getAppId());
+    if (!_fs.exists(jobDir)) {
+      // check intermediate dir
+      jobDir = new Path(_intermediateDir, job.getAppId());
+    }
+
     _LOGGER.debug("Job directory for " + job.getAppId() + ": " + jobDir);
 
     // parse config
