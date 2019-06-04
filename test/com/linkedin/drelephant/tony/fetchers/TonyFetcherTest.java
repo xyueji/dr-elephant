@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.io.DatumWriter;
@@ -48,33 +47,42 @@ import org.junit.Test;
 
 
 public class TonyFetcherTest {
-  private static final String APPLICATION_ID = "application_123_456";
+  private static final String APPLICATION_ID_1 = "application_123_456";
+  private static final String APPLICATION_ID_2 = "application_789_101";
+  private static File _intermediateDir;
   private static File _finishedDir;
   private static String _tonyConfDir;
   private static Date _endDate;
 
   @BeforeClass
   public static void setup() throws IOException, ParseException {
-    setupFinishedApplicationDir();
+    setupTestData();
     setupTestTonyConfDir();
   }
 
-  private static void setupFinishedApplicationDir() throws IOException, ParseException {
+  private static void setupTestData() throws IOException, ParseException {
     String yearMonthDay = "2019/05/02";
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
     _endDate = sdf.parse(yearMonthDay);
 
     File tempDir = Files.createTempDir();
+    _intermediateDir = new File(tempDir, "intermediate");
     _finishedDir = new File(tempDir, "finished");
-    File appDir = new File(_finishedDir, yearMonthDay + Path.SEPARATOR + APPLICATION_ID);
+
+    createAppHistoryDir(new File(_intermediateDir, APPLICATION_ID_1));
+    createAppHistoryDir(new File(_finishedDir, yearMonthDay + Path.SEPARATOR + APPLICATION_ID_2));
+  }
+
+  private static void createAppHistoryDir(File appDir) throws IOException {
     appDir.mkdirs();
 
+    // write fake config history file
     Configuration conf = new Configuration(false);
     conf.set("foo", "bar");
-
     File configFile = new File(appDir, Constants.TONY_FINAL_XML);
     conf.writeXml(new FileOutputStream(configFile));
 
+    // create fake events
     Event event0 = new Event(EventType.TASK_FINISHED, new TaskFinished("worker", 0, "SUCCEEDED",
         ImmutableList.of(new Metric("my_metric", 0.0))), System.currentTimeMillis());
     Event event1 = new Event(EventType.TASK_FINISHED, new TaskFinished("worker", 1, "SUCCEEDED",
@@ -82,8 +90,9 @@ public class TonyFetcherTest {
     Event event2 = new Event(EventType.TASK_FINISHED, new TaskFinished("ps", 0, "SUCCEEDED",
         ImmutableList.of(new Metric("my_metric", 0.0))), System.currentTimeMillis());
 
+    // write fake events history file
     File eventFile = new File(appDir,
-        APPLICATION_ID + "-0-" + _endDate.getTime() + "-user1-SUCCEEDED." + Constants.HISTFILE_SUFFIX);
+        APPLICATION_ID_1 + "-0-" + _endDate.getTime() + "-user1-SUCCEEDED." + Constants.HISTFILE_SUFFIX);
     DatumWriter<Event> userDatumWriter = new SpecificDatumWriter<>(Event.class);
     DataFileWriter<Event> dataFileWriter = new DataFileWriter<>(userDatumWriter);
     dataFileWriter.create(event0.getSchema(), eventFile);
@@ -95,6 +104,7 @@ public class TonyFetcherTest {
 
   private static void setupTestTonyConfDir() throws IOException {
     Configuration testTonyConf = new Configuration(false);
+    testTonyConf.set(TonyConfigurationKeys.TONY_HISTORY_INTERMEDIATE, _intermediateDir.getPath());
     testTonyConf.set(TonyConfigurationKeys.TONY_HISTORY_FINISHED, _finishedDir.getPath());
 
     File confDir = Files.createTempDir();
@@ -104,7 +114,16 @@ public class TonyFetcherTest {
   }
 
   @Test
-  public void testFetchData() throws Exception {
+  public void testFetchDataIntermediateDir() throws Exception {
+    testHelper(APPLICATION_ID_1);
+  }
+
+  @Test
+  public void testFetchDataFinishedDir() throws Exception {
+    testHelper(APPLICATION_ID_2);
+  }
+
+  private static void testHelper(String appId) throws Exception {
     FetcherConfigurationData configData = new FetcherConfigurationData(null, null,
         ImmutableMap.of(Constants.TONY_CONF_DIR, _tonyConfDir));
     TonyFetcher tonyFetcher = new TonyFetcher(configData);
@@ -112,11 +131,11 @@ public class TonyFetcherTest {
     AnalyticJob job = new AnalyticJob();
     ApplicationType tonyAppType = new ApplicationType(Constants.APP_TYPE);
     job.setFinishTime(_endDate.getTime());
-    job.setAppId(APPLICATION_ID);
+    job.setAppId(appId);
     job.setAppType(tonyAppType);
     TonyApplicationData appData = tonyFetcher.fetchData(job);
 
-    Assert.assertEquals(APPLICATION_ID, appData.getAppId());
+    Assert.assertEquals(appId, appData.getAppId());
     Assert.assertEquals(tonyAppType, appData.getApplicationType());
     Assert.assertEquals("bar", appData.getConf().get("foo"));
     Map<String, Map<Integer, TonyTaskData>> metricsMap = appData.getTaskMap();
