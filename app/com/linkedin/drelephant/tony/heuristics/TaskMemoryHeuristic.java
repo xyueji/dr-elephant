@@ -15,6 +15,7 @@
  */
 package com.linkedin.drelephant.tony.heuristics;
 
+import com.google.common.base.Strings;
 import com.linkedin.drelephant.analysis.Heuristic;
 import com.linkedin.drelephant.analysis.HeuristicResult;
 import com.linkedin.drelephant.analysis.HeuristicResultDetails;
@@ -80,15 +81,15 @@ public class TaskMemoryHeuristic implements Heuristic<TonyApplicationData> {
     List<HeuristicResultDetails> details = new ArrayList<>();
 
     for (String taskType : taskTypes) {
-      Map<Integer, TonyTaskData> taskTypeMap = taskMap.get(taskType);
-      if (taskTypeMap == null) {
+      int taskInstances = conf.getInt(TonyConfigurationKeys.getInstancesKey(taskType), 0);
+      details.add(new HeuristicResultDetails("Number of " + taskType + " tasks", String.valueOf(taskInstances)));
+      if (taskInstances == 0) {
         continue;
       }
-      details.add(new HeuristicResultDetails("Number of " + taskType + " tasks",
-          Integer.toString(taskTypeMap.size())));
 
       // get per task memory requested
-      String memoryString = conf.get(TonyConfigurationKeys.getResourceKey(taskType, Constants.MEMORY));
+      String memoryString = conf.get(TonyConfigurationKeys.getResourceKey(taskType, Constants.MEMORY),
+          TonyConfigurationKeys.DEFAULT_MEMORY);
       String memoryStringMB = com.linkedin.tony.util.Utils.parseMemoryString(memoryString);
       long taskBytesRequested = Long.parseLong(memoryStringMB) * FileUtils.ONE_MB;
       details.add(new HeuristicResultDetails("Requested memory (MB) per " + taskType + " task",
