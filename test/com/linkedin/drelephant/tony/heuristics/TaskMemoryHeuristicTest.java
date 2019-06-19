@@ -29,6 +29,7 @@ import com.linkedin.tony.events.EventType;
 import com.linkedin.tony.events.Metric;
 import com.linkedin.tony.events.TaskFinished;
 import com.linkedin.tony.rpc.impl.TaskStatus;
+import controllers.Application;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -130,6 +131,20 @@ public class TaskMemoryHeuristicTest {
         ImmutableMap.of(Constants.WORKER_JOB_NAME, "2g"),
         Severity.NONE
     );
+  }
+
+  /**
+   * Verifies that no exception is thrown when the task map is empty.
+   */
+  @Test
+  public void testEmptyTaskMap() {
+    ApplicationType appType = new ApplicationType(Constants.APP_TYPE);
+    Configuration conf = new Configuration(false);
+    conf.setInt(TonyConfigurationKeys.getInstancesKey(Constants.PS_JOB_NAME), 0);
+    TonyApplicationData data = new TonyApplicationData("application_123_456",
+        appType, conf, Collections.EMPTY_LIST);
+    new TaskMemoryHeuristic(new HeuristicConfigurationData("ignored",
+        "ignored", "ignored", appType, Collections.EMPTY_MAP)).apply(data);
   }
 
   public void testHelper(Map<String, double[]> memUsed, Map<String, String> memRequested, Severity expectedSeverity) {

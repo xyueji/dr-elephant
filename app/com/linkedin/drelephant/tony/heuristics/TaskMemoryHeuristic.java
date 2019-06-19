@@ -80,8 +80,12 @@ public class TaskMemoryHeuristic implements Heuristic<TonyApplicationData> {
     List<HeuristicResultDetails> details = new ArrayList<>();
 
     for (String taskType : taskTypes) {
+      Map<Integer, TonyTaskData> taskTypeMap = taskMap.get(taskType);
+      if (taskTypeMap == null) {
+        continue;
+      }
       details.add(new HeuristicResultDetails("Number of " + taskType + " tasks",
-          Integer.toString(taskMap.get(taskType).size())));
+          Integer.toString(taskTypeMap.size())));
 
       // get per task memory requested
       String memoryString = conf.get(TonyConfigurationKeys.getResourceKey(taskType, Constants.MEMORY));
