@@ -75,9 +75,9 @@ public class TaskMemoryHeuristic implements Heuristic<TonyApplicationData> {
     }
 
     Configuration yarnConf = new YarnConfiguration();
-    int mininumMBAllocation = yarnConf.getInt(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB,
+    int minimumMBAllocation = yarnConf.getInt(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB,
         YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_MB);
-    graceMemoryHeadroomBytes = 2 * mininumMBAllocation * FileUtils.ONE_MB;
+    graceMemoryHeadroomBytes = 2 * minimumMBAllocation * FileUtils.ONE_MB;
   }
 
   @Override
