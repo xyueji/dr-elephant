@@ -124,7 +124,7 @@ public class TaskMemoryHeuristic implements Heuristic<TonyApplicationData> {
       double maxMemoryRatio = maxMemoryBytesUsed / taskBytesRequested;
       Severity taskMemorySeverity = Severity.getSeverityDescending(maxMemoryRatio, maxMemoryLimits[0],
           maxMemoryLimits[1], maxMemoryLimits[2], maxMemoryLimits[3]);
-      severityScore = Utils.getHeuristicScore(taskMemorySeverity, taskInstances);
+      severityScore += Utils.getHeuristicScore(taskMemorySeverity, taskInstances);
       finalSeverity = Severity.max(finalSeverity, taskMemorySeverity);
     }
 

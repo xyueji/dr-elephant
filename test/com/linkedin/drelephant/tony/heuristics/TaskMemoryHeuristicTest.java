@@ -22,6 +22,7 @@ import com.linkedin.drelephant.analysis.HeuristicResult;
 import com.linkedin.drelephant.analysis.Severity;
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData;
 import com.linkedin.drelephant.tony.data.TonyApplicationData;
+import com.linkedin.drelephant.util.Utils;
 import com.linkedin.tony.Constants;
 import com.linkedin.tony.TonyConfigurationKeys;
 import com.linkedin.tony.events.Event;
@@ -54,22 +55,24 @@ public class TaskMemoryHeuristicTest {
           1.3e9
         }, Constants.PS_JOB_NAME, new double[]{0.5e9}),
         ImmutableMap.of(Constants.WORKER_JOB_NAME, "10g", Constants.PS_JOB_NAME, "2g"),
-        Severity.CRITICAL
+        Severity.CRITICAL,
+        Severity.CRITICAL.getValue() * 4
     );
   }
 
   /**
-   * 10g ps requested, max ps memory < 60%
+   * 10g workers requested, max worker memory < 70%; 10g ps requested, max ps memory < 60%
    */
   @Test
   public void testSevere() {
     testHelper(
         ImmutableMap.of(Constants.WORKER_JOB_NAME, new double[]{
-            1.5e9,
-            1.6e9,
+            6.5e9,
+            6.6e9,
         }, Constants.PS_JOB_NAME, new double[]{5.84e9}),
-        ImmutableMap.of(Constants.WORKER_JOB_NAME, "2g", Constants.PS_JOB_NAME, "10g"),
-        Severity.SEVERE
+        ImmutableMap.of(Constants.WORKER_JOB_NAME, "10g", Constants.PS_JOB_NAME, "10g"),
+        Severity.SEVERE,
+        Severity.MODERATE.getValue() * 2 /* workers */ + Severity.SEVERE.getValue() * 1
     );
   }
 
@@ -84,7 +87,8 @@ public class TaskMemoryHeuristicTest {
             6.6e9,
         }),
         ImmutableMap.of(Constants.WORKER_JOB_NAME, "10g"),
-        Severity.MODERATE
+        Severity.MODERATE,
+        Severity.MODERATE.getValue() * 2
     );
   }
 
@@ -99,7 +103,8 @@ public class TaskMemoryHeuristicTest {
             7.45e9,
         }),
         ImmutableMap.of(Constants.WORKER_JOB_NAME, "10g"),
-        Severity.LOW
+        Severity.LOW,
+        0
     );
   }
 
@@ -114,7 +119,8 @@ public class TaskMemoryHeuristicTest {
             8.6e9,
         }),
         ImmutableMap.of(Constants.WORKER_JOB_NAME, "10g"),
-        Severity.NONE
+        Severity.NONE,
+        0
     );
   }
 
@@ -129,7 +135,8 @@ public class TaskMemoryHeuristicTest {
             0.6e9,
         }),
         ImmutableMap.of(Constants.WORKER_JOB_NAME, "2g"),
-        Severity.NONE
+        Severity.NONE,
+        0
     );
   }
 
@@ -146,7 +153,8 @@ public class TaskMemoryHeuristicTest {
             1.6e9,
         }),
         ImmutableMap.of(Constants.WORKER_JOB_NAME, "3g"),
-        Severity.NONE
+        Severity.NONE,
+        0
     );
   }
 
@@ -165,7 +173,8 @@ public class TaskMemoryHeuristicTest {
 
   }
 
-  public void testHelper(Map<String, double[]> memUsed, Map<String, String> memRequested, Severity expectedSeverity) {
+  public void testHelper(Map<String, double[]> memUsed, Map<String, String> memRequested, Severity expectedSeverity,
+      int expectedScore) {
     Configuration conf = new Configuration(false);
     List<Event> events = new ArrayList<>();
     for (Map.Entry<String, String> entry : memRequested.entrySet()) {
@@ -188,5 +197,6 @@ public class TaskMemoryHeuristicTest {
         "ignored", "ignored", appType, Collections.EMPTY_MAP));
     HeuristicResult result = heuristic.apply(data);
     Assert.assertEquals(expectedSeverity, result.getSeverity());
+    Assert.assertEquals(expectedScore, result.getScore());
   }
 }
