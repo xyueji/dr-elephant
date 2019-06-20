@@ -42,7 +42,7 @@ import org.junit.Test;
 public class TaskMemoryHeuristicTest {
 
   /**
-   * 3g workers requested, max worker memory < 50%
+   * 10g workers requested, max worker memory < 50%
    */
   @Test
   public void testCritical() {
@@ -53,13 +53,13 @@ public class TaskMemoryHeuristicTest {
           1e9,
           1.3e9
         }, Constants.PS_JOB_NAME, new double[]{0.5e9}),
-        ImmutableMap.of(Constants.WORKER_JOB_NAME, "3g", Constants.PS_JOB_NAME, "2g"),
+        ImmutableMap.of(Constants.WORKER_JOB_NAME, "10g", Constants.PS_JOB_NAME, "2g"),
         Severity.CRITICAL
     );
   }
 
   /**
-   * 3g ps requested, max ps memory < 60%
+   * 10g ps requested, max ps memory < 60%
    */
   @Test
   public void testSevere() {
@@ -67,53 +67,53 @@ public class TaskMemoryHeuristicTest {
         ImmutableMap.of(Constants.WORKER_JOB_NAME, new double[]{
             1.5e9,
             1.6e9,
-        }, Constants.PS_JOB_NAME, new double[]{1.84e9}),
-        ImmutableMap.of(Constants.WORKER_JOB_NAME, "2g", Constants.PS_JOB_NAME, "3g"),
+        }, Constants.PS_JOB_NAME, new double[]{5.84e9}),
+        ImmutableMap.of(Constants.WORKER_JOB_NAME, "2g", Constants.PS_JOB_NAME, "10g"),
         Severity.SEVERE
     );
   }
 
   /**
-   * 3g workers requested, max worker memory < 70%
+   * 10g workers requested, max worker memory < 70%
    */
   @Test
   public void testModerate() {
     testHelper(
         ImmutableMap.of(Constants.WORKER_JOB_NAME, new double[]{
-            2.14e9,
-            2e9,
+            6.5e9,
+            6.6e9,
         }),
-        ImmutableMap.of(Constants.WORKER_JOB_NAME, "3g"),
+        ImmutableMap.of(Constants.WORKER_JOB_NAME, "10g"),
         Severity.MODERATE
     );
   }
 
   /**
-   * 3g workers requested, max worker memory < 80%
+   * 10g workers requested, max worker memory < 80%
    */
   @Test
   public void testLow() {
     testHelper(
         ImmutableMap.of(Constants.WORKER_JOB_NAME, new double[]{
-            2e9,
-            2.45e9,
+            7.56e9,
+            7.45e9,
         }),
-        ImmutableMap.of(Constants.WORKER_JOB_NAME, "3g"),
+        ImmutableMap.of(Constants.WORKER_JOB_NAME, "10g"),
         Severity.LOW
     );
   }
 
   /**
-   * 3g workers requested, max worker memory > 80%
+   * 10g workers requested, max worker memory > 80%
    */
   @Test
   public void testNone() {
     testHelper(
         ImmutableMap.of(Constants.WORKER_JOB_NAME, new double[]{
-            2.5e9,
-            2.6e9,
+            8.5e9,
+            8.6e9,
         }),
-        ImmutableMap.of(Constants.WORKER_JOB_NAME, "3g"),
+        ImmutableMap.of(Constants.WORKER_JOB_NAME, "10g"),
         Severity.NONE
     );
   }
@@ -134,6 +134,23 @@ public class TaskMemoryHeuristicTest {
   }
 
   /**
+   * Though memory utilization is about 50%, severity should be none
+   * because requested memory is within the default 2 GB grace headroom of the
+   * max used memory.
+   */
+  @Test
+  public void testRequestedSizeWithinGraceHeadroomSeverity() {
+    testHelper(
+        ImmutableMap.of(Constants.WORKER_JOB_NAME, new double[]{
+            1.5e9,
+            1.6e9,
+        }),
+        ImmutableMap.of(Constants.WORKER_JOB_NAME, "3g"),
+        Severity.NONE
+    );
+  }
+
+  /**
    * Verifies that no exception is thrown when the task map is empty.
    */
   @Test
@@ -145,6 +162,7 @@ public class TaskMemoryHeuristicTest {
         appType, conf, Collections.EMPTY_LIST);
     new TaskMemoryHeuristic(new HeuristicConfigurationData("ignored",
         "ignored", "ignored", appType, Collections.EMPTY_MAP)).apply(data);
+
   }
 
   public void testHelper(Map<String, double[]> memUsed, Map<String, String> memRequested, Severity expectedSeverity) {
