@@ -14,5 +14,15 @@
 * the License.
 *@
 <p>
-  Don't use so much memory!
+  This heuristic shows how much memory you requested for each task type and what the max memory used
+  by any instance of each task type actually was. If the requested memory is within some grace amount
+  (default 2 GB) of the max memory, then severity will be none. Otherwise, if the max memory used is
+  less than some percentage (by default 80, 70, 60, or 50 percent) of the requested memory, then
+  Dr. Elephant will indicate some severity (low, moderate, severe, or critical, respectively).
+</p>
+<p>
+  To reduce the amount of memory requested for a task, you can update <code>tony.X.memory</code>, where
+  <code>X</code> is your task type. For example, to request 4 GB for your worker tasks, you can set
+  <code>tony.worker.memory=4g</code>. For more information on TonY configurations, please visit the
+  <a href="https://github.com/linkedin/TonY/wiki/TonY-Configurations">TonY Configurations Wiki page</a>.
 </p>

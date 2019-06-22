@@ -15,6 +15,7 @@
  */
 package com.linkedin.drelephant.tony.heuristics;
 
+import com.google.common.base.Strings;
 import com.linkedin.drelephant.analysis.Heuristic;
 import com.linkedin.drelephant.analysis.HeuristicResult;
 import com.linkedin.drelephant.analysis.HeuristicResultDetails;
@@ -32,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.log4j.Logger;
 
 
@@ -51,6 +53,10 @@ public class TaskMemoryHeuristic implements Heuristic<TonyApplicationData> {
   // Initialized to default max memory thresholds
   private double[] maxMemoryLimits = {0.8, 0.7, 0.6, 0.5};
 
+  // If the requested memory is within this amount of the max memory usage, automatic pass.
+  // This is to prevent Dr. Elephant flagging container sizes of 3 GB when max memory usage is 2 GB.
+  private long graceMemoryHeadroomBytes;
+
   /**
    * Constructor for {@link TaskMemoryHeuristic}.
    * @param heuristicConfData  the configuration for this heuristic
@@ -67,6 +73,11 @@ public class TaskMemoryHeuristic implements Heuristic<TonyApplicationData> {
     if (params.containsKey(TASK_MEMORY_THRESHOLDS_CONF)) {
       maxMemoryLimits = Utils.getParam(params.get(TASK_MEMORY_THRESHOLDS_CONF), maxMemoryLimits.length);
     }
+
+    Configuration yarnConf = new YarnConfiguration();
+    int minimumMBAllocation = yarnConf.getInt(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB,
+        YarnConfiguration.DEFAULT_RM_SCHEDULER_MINIMUM_ALLOCATION_MB);
+    graceMemoryHeadroomBytes = 2 * minimumMBAllocation * FileUtils.ONE_MB;
   }
 
   @Override
@@ -78,13 +89,18 @@ public class TaskMemoryHeuristic implements Heuristic<TonyApplicationData> {
     Set<String> taskTypes = com.linkedin.tony.util.Utils.getAllJobTypes(conf);
     Severity finalSeverity = Severity.NONE;
     List<HeuristicResultDetails> details = new ArrayList<>();
+    int severityScore = 0;
 
     for (String taskType : taskTypes) {
-      details.add(new HeuristicResultDetails("Number of " + taskType + " tasks",
-          Integer.toString(taskMap.get(taskType).size())));
+      int taskInstances = conf.getInt(TonyConfigurationKeys.getInstancesKey(taskType), 0);
+      details.add(new HeuristicResultDetails("Number of " + taskType + " tasks", String.valueOf(taskInstances)));
+      if (taskInstances == 0) {
+        continue;
+      }
 
       // get per task memory requested
-      String memoryString = conf.get(TonyConfigurationKeys.getResourceKey(taskType, Constants.MEMORY));
+      String memoryString = conf.get(TonyConfigurationKeys.getResourceKey(taskType, Constants.MEMORY),
+          TonyConfigurationKeys.DEFAULT_MEMORY);
       String memoryStringMB = com.linkedin.tony.util.Utils.parseMemoryString(memoryString);
       long taskBytesRequested = Long.parseLong(memoryStringMB) * FileUtils.ONE_MB;
       details.add(new HeuristicResultDetails("Requested memory (MB) per " + taskType + " task",
@@ -100,18 +116,20 @@ public class TaskMemoryHeuristic implements Heuristic<TonyApplicationData> {
           Long.toString((long) maxMemoryBytesUsed / FileUtils.ONE_MB)));
 
       // compare to threshold and update severity
-      if (taskBytesRequested <= defaultContainerMemoryBytes) {
-        // If using default container memory, automatic pass
+      if (taskBytesRequested <= defaultContainerMemoryBytes
+          || taskBytesRequested <= maxMemoryBytesUsed + graceMemoryHeadroomBytes) {
+        // If using default container memory or within grace headroom, automatic pass
         continue;
       }
       double maxMemoryRatio = maxMemoryBytesUsed / taskBytesRequested;
       Severity taskMemorySeverity = Severity.getSeverityDescending(maxMemoryRatio, maxMemoryLimits[0],
           maxMemoryLimits[1], maxMemoryLimits[2], maxMemoryLimits[3]);
+      severityScore += Utils.getHeuristicScore(taskMemorySeverity, taskInstances);
       finalSeverity = Severity.max(finalSeverity, taskMemorySeverity);
     }
 
     return new HeuristicResult(_heuristicConfData.getClassName(), _heuristicConfData.getHeuristicName(), finalSeverity,
-        0, details);
+        severityScore, details);
   }
 
   @Override
