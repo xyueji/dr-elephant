@@ -60,7 +60,8 @@ public class TonyMetricsAggregator implements HadoopMetricsAggregator {
       String memoryString = tonyConf.get(TonyConfigurationKeys.getResourceKey(taskType, Constants.MEMORY));
       String memoryStringMB = com.linkedin.tony.util.Utils.parseMemoryString(memoryString);
       long mbRequested = Long.parseLong(memoryStringMB);
-      double maxMemoryMBUsed = TonyUtils.getMaxMemoryBytesUsedForTaskType(taskMap, taskType) / FileUtils.ONE_MB;
+      double maxMemoryMBUsed = TonyUtils.getMaxMetricForTaskTypeAndMetricName(taskMap, taskType,
+          Constants.MAX_MEMORY_BYTES) / FileUtils.ONE_MB;
 
       for (TonyTaskData taskData : entry.getValue().values()) {
         long taskDurationSec = (taskData.getTaskEndTime() - taskData.getTaskStartTime()) / Statistics.SECOND_IN_MS;
