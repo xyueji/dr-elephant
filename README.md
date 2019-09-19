@@ -23,7 +23,7 @@ Engineering Blog: [Click here](https://engineering.linkedin.com/blog/2016/04/dr-
 
 ## Mailing-list & Github Issues
 
-Google groups mailing list: [Click here](https://groups.google.com/forum/#!forum/dr-elephant-users) (Reached upper limit! please create github issues)
+~~Google groups mailing list: [Click here](https://groups.google.com/forum/#!forum/dr-elephant-users)~~ (Reached upper limit! please create github issues)
 
 Github issues: [click here](https://github.com/linkedin/dr-elephant/issues)
 
