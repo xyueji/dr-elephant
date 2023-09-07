@@ -9,7 +9,7 @@
 从github clone一份最新的dr-elephant代码进行编译
 
 ```shell
-git clone https://github.com/xyueji/dr-elephant.git
+git clone https://github.com/linkedin/dr-elephant.git
 cd dr-elephant
 ```
 
