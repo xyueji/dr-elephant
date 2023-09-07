@@ -165,7 +165,7 @@ MapReduce任务信息拉取是通过com.linkedin.drelephant.mapreduce.fetchers.M
 
 另发现mapreduce任务类型无法识别：
 
-![image-20230901151437931](/Users/xiongzhigang/Library/Application Support/typora-user-images/image-20230901151437931.png)
+![image-20230901151437931](./images/image-20230901151437931.png)
 
 修改app-conf/JobTypeConf.xml，增加jobType问题解决。
 
