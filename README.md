@@ -1,52 +1,350 @@
 # Dr. Elephant
 
-[![Build Status](https://api.travis-ci.org/linkedin/dr-elephant.svg)](https://travis-ci.org/linkedin/dr-elephant/)
-[![Join the chat at https://gitter.im/linkedin/dr-elephant](https://badges.gitter.im/linkedin/dr-elephant.svg)](https://gitter.im/linkedin/dr-elephant?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+## 支持Spark2.x&3.x
 
-<a href=""><img src="images/wiki/dr-elephant-logo-150x150.png" align="left" hspace="10" vspace="6"></a>
+## 
 
-**Dr. Elephant** is a performance monitoring and tuning tool for Hadoop and Spark. It automatically gathers all the metrics, runs analysis on them, and presents them in a simple way for easy consumption. Its goal is to improve developer productivity and increase cluster efficiency by making it easier to tune the jobs. It analyzes the Hadoop and Spark jobs using a set of pluggable, configurable, rule-based heuristics that provide insights on how a job performed, and then uses the results to make suggestions about how to tune the job to make it perform more efficiently.
+### 编译
 
-## Documentation
+从github clone一份最新的dr-elephant代码进行编译
 
-For more information on Dr. Elephant, check the wiki pages [here](https://github.com/linkedin/dr-elephant/wiki).
+```shell
+git clone https://github.com/xyueji/dr-elephant.git
+cd dr-elephant
+```
 
-For quick setup instructions: [Click here](https://github.com/linkedin/dr-elephant/wiki/Quick-Setup-Instructions-(Must-Read))
+编译必须依赖activator，下载activator包（https://downloads.typesafe.com/typesafe-activator/1.3.12/typesafe-activator-1.3.12.zip,），并且设置环境变量
 
-Developer guide: [Click here](https://github.com/linkedin/dr-elephant/wiki/Developer-Guide)
+```shell
+export ACTIVATOR_HOME=/path/to/unzipped/activator
+export PATH=$ACTIVATOR_HOME/bin:$PATH
+```
 
-Administrator guide: [Click here](https://github.com/linkedin/dr-elephant/wiki/Administrator-Guide)
+(可选择，但是推荐)编译新的dr-elephant页面，需要node环境
 
-User guide: [Click here](https://github.com/linkedin/dr-elephant/wiki/User-Guide)
+```shell
+sudo yum install npm
+sudo npm install -g bower
+cd web; bower install; cd ..
+```
 
-Engineering Blog: [Click here](https://engineering.linkedin.com/blog/2016/04/dr-elephant-open-source-self-serve-performance-tuning-hadoop-spark)
+开始编译，Dr-elephant是一个sbt项目，使用sbt编译。开始编译前指定hadoop和spark版本，只支持hadoop2.x和spark1.x，我们选择hadoop_version=2.7.3和spark_version=1.6.2（hadoop3.x和spark2.x和spark3.x不影响，问题后续解决）。
 
-## Mailing-list & Github Issues
+***compile.conf***
 
-~~Google groups mailing list: [Click here](https://groups.google.com/forum/#!forum/dr-elephant-users)~~ (Reached upper limit! please create github issues)
+```
+hadoop_version=2.7.3
+spark_version=1.6.2
+play_opts="-Dsbt.repository.config=app-conf/resolver.conf"
+./compile.sh ./compile.conf
+```
 
-Github issues: [click here](https://github.com/linkedin/dr-elephant/issues)
+编译过程中发现几个问题：
 
-## Meetings
+- 编译发现很多包不存在，仓库链接已经过时。更改sbt仓库地址http://repo.typesafe.com/typesafe/releases为https://repo1.maven.org/maven2：
 
-We have scheduled a weekly Dr. Elephant meeting for the interested developers and users to discuss future plans for Dr. Elephant. Please [click here](https://github.com/linkedin/dr-elephant/issues/209) for details.
+```
+cat ~/.sbt/repositories
 
-## How to Contribute?
+[repositories]
+  local
+  activator-launcher-local: file://${activator.local.repository-${activator.home-${user.home}/.activator}/repository}, [organization]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]
+  activator-local: file://${activator.local.repository-/Users/xiongzhigang/work/wanmei/share/activator-dist-1.3.12/repository}, [organization]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]
+  maven-central
+  typesafe-releases: https://repo1.maven.org/maven2
+  typesafe-ivy-releasez: http://repo.typesafe.com/typesafe/ivy-releases, [organization]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]
+```
 
-Check this [link](https://github.com/linkedin/dr-elephant/wiki/How-to-Contribute%3F).
+- 编译快结束后发现测试用例过不了，修改compile.sh，注释掉408行
 
-## License
+```
+# play_command $OPTS clean compile test $extra_commands
+```
 
-    Copyright 2016 LinkedIn Corp.
+编译成功后在dist目录生成dr-elephant-2.1.7.zip
 
-    Licensed under the Apache License, Version 2.0 (the "License"); you may not
-    use this file except in compliance with the License. You may obtain a copy of
-    the License at
+### 部署
 
-    http://www.apache.org/licenses/LICENSE-2.0
+#### 部署Dr-elephant
 
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-    License for the specific language governing permissions and limitations under
-    the License.
+需要环境jdk1.8，Hadoop，Spark，mysql。提前建好mysql库drelephant，修改app-conf/elephant.conf:
+
+```
+# Play application server port
+http_port=8080
+
+# Database configuration
+db_url=xxx:3306
+db_name=xxx
+db_user=xxx
+db_password="xxx"
+```
+
+设置jdk，Hadoop，Spark相关的环境变量，修改bin/start.sh
+
+```shell
+# HADOOP & SPARK
+export HADOOP_HOME=/opt/cloudera/parcels/CDH/lib/hadoop
+export HADOOP_CONF_DIR=/etc/hadoop/conf
+export SPARK_HOME=/opt/cloudera/parcels/CDH/lib/spark
+export SPARK_CONF_DIR=/etc/spark/conf
+
+export JAVA_HOME="$project_root/../jdk1.8.0_191"
+export JAVA_LIB_PATH=$JAVA_HOME/lib
+
+# 兼容HADOOP3X
+# Get hadoop version by executing 'hadoop version' and parse the result
+HADOOP_VERSION=$(hadoop version | awk '{if (NR == 1) {print $2;}}')
+if [[ $HADOOP_VERSION == 1* ]];
+then
+  echo "This is hadoop1.x grid. Switch to hadoop2 if you want to use Dr. Elephant"
+elif [[ $HADOOP_VERSION == 2* || $HADOOP_VERSION == 3* ]];
+then
+  JAVA_LIB_PATH=$HADOOP_HOME"/lib/native"
+  echo "This is hadoop${HADOOP_VERSION} grid. Adding Java library to path: "$JAVA_LIB_PATH
+else
+  echo "error: Hadoop isn't properly set on this machine. Could you verify cmd 'hadoop version'? "
+  exit 1
+fi
+```
+
+启动Dr-elephant
+
+```shell
+sh bin/start.sh
+```
+
+发现guava版本冲突，lib/com.google.guava.guava-18.0.jar替换为lib/guava-28.1-jre.jar问题解决。
+
+配置各任务拉取信息类，修改app-conf/FetcherConf.xml
+
+```xml
+<fetchers>
+   <fetcher>
+    <applicationtype>mapreduce</applicationtype>
+    <classname>com.linkedin.drelephant.mapreduce.fetchers.MapReduceFSFetcherHadoop2</classname>
+    <params>
+      <sampling_enabled>false</sampling_enabled>
+      <history_log_size_limit_in_mb>500</history_log_size_limit_in_mb>
+      <history_server_time_zone>UTC</history_server_time_zone>
+    </params>
+  </fetcher>
+
+  <fetcher>
+    <applicationtype>spark</applicationtype>
+    <classname>com.linkedin.drelephant.spark.fetchers.SparkFetcher</classname>
+    <params>
+      <use_rest_for_eventlogs>true</use_rest_for_eventlogs>
+      <should_process_logs_locally>true</should_process_logs_locally>
+    </params>
+  </fetcher>
+</fetchers>
+```
+
+设置处理队列大小和拉取历史任务的时间，修改GeneralConf.xml：
+
+```xml
+ <!--
+  Initial window in MS to indicate how much older apps to fetch from RM.
+  -->
+  <property>
+    <name>drelephant.analysis.fetch.initial.windowMillis</name>
+    <value>3600000</value>
+  </property>
+
+ <property>
+    <name>drelephant.analysis.thread.count</name>
+    <value>30</value>
+    <description>Number of threads to analyze the completed jobs</description>
+  </property>
+```
+
+#### MapReduce任务采集
+
+MapReduce任务信息拉取是通过com.linkedin.drelephant.mapreduce.fetchers.MapReduceFSFetcherHadoop2这个类实现的，发现此类是通过拉取/user/history/done（mapreduce.jobhistory.done-dir）和/user/history/done_intermediate（mapreduce.jobhistory.intermediate-done-dir）目录获取的任务信息。因此Dr-elephant启动用户必须能够访问这2个用户。
+
+另发现mapreduce任务类型无法识别：
+
+![image-20230901151437931](/Users/xiongzhigang/Library/Application Support/typora-user-images/image-20230901151437931.png)
+
+修改app-conf/JobTypeConf.xml，增加jobType问题解决。
+
+```xml
+<jobType>
+    <name>MapReduce</name>
+    <applicationtype>mapreduce</applicationtype>
+    <conf>mapreduce.map.java.opts</conf>
+  </jobType>
+```
+
+#### TEZ任务采集
+
+tez任务信息是从timelineserver获取的，因此需要启动timelineserver。
+
+修改yarn-site.xml：
+
+```xml
+<property>
+    <name>yarn.timeline-service.enabled</name>
+    <value>true</value>
+</property>
+<property>
+    <name>yarn.timeline-service.hostname</name>
+    <value>cvm-remain-cdp-test03</value>
+</property>
+<property>
+    <name>yarn.timeline-service.http-cross-origin.enabled</name>
+    <value>true</value>
+</property>
+<property>
+    <name>yarn.resourcemanager.system-metrics-publisher.enabled</name>
+    <value>true</value>
+</property>
+<property>
+    <name>yarn.timeline-service.generic-application-history.enabled</name>
+    <value>true</value>
+</property>
+<property>
+    <name>yarn.timeline-service.addres</name>
+    <value>${yarn.timeline-service.hostname}:10200</value>
+</property>
+<property>
+    <name>yarn.timeline-service.webapp.address</name>
+    <value>${yarn.timeline-service.hostname}:8188</value>
+</property>
+<property>
+    <name>mapreduce.job.emit-timeline-data</name>
+    <value>true</value>
+</property>
+```
+
+启动timelineserver
+
+```shell
+sudo -u mapred yarn --daemon  start timelineserver
+```
+
+修改tez-site.xml
+
+```xml
+<property>
+    <name>tez.history.logging.service.class</name>
+    <value>org.apache.tez.dag.history.logging.ats.ATSHistoryLoggingService</value>
+</property>
+<property>
+    <name>tez.yarn.ats.enabled</name>
+    <value>true</value>
+</property>
+<property>
+    <name>tez.allow.disabled.timeline-domains</name>
+    <value>true</value>
+</property>
+<property>
+    <name>tez.tez-ui.history-url.base</name>
+    <value>http://cvm-remain-cdp-test03.data:9999/tez-ui/</value>
+</property>
+```
+
+新增tez任务采集，修改app-conf/FetcherConf.xml
+
+```xml
+   <!--
+     REST based fetcher for Tez jobs which pulls job metrics and data from Timeline Server API
+   -->
+  <fetcher>
+    <applicationtype>tez</applicationtype>
+    <classname>com.linkedin.drelephant.tez.fetchers.TezFetcher</classname>
+  </fetcher>
+```
+
+重启Dr-elephant
+
+补充：
+
+- TEZ-UI中的Hive Queries为空，在hive-site.xml中加下面配置，问题解决。
+
+```xml
+<property>
+    <name>hive.exec.failure.hooks</name>
+    <value>org.apache.hadoop.hive.ql.hooks.ATSHook</value>
+</property>
+<property>
+    <name>hive.exec.post.hooks</name>
+    <value>org.apache.hadoop.hive.ql.hooks.ATSHook</value>
+</property>
+<property>
+    <name>hive.exec.pre.hooks</name>
+    <value>org.apache.hadoop.hive.ql.hooks.ATSHook</value>
+</property>
+```
+
+- 从history server 跳转到TEZ UI任务详细页需要tez.am.tez-ui.history-url.template参数配置正确，例如：__HISTORY_URL_BASE__?viewPath=/#/tez-app/__APPLICATION_ID__
+
+#### Spark2任务采集
+
+确保以下2点就可以
+
+- start.sh中的Spark配置环境变量：export SPARK_CONF_DIR=/etc/spark/conf
+- app-conf/FetcherConf.xml中配置了信息拉取类：com.linkedin.drelephant.spark.fetchers.SparkFetcher
+
+#### Spark3任务采集
+
+把Spark配置环境变量设置为：export SPARK_CONF_DIR=/etc/spark3/conf
+
+重启Dr-elephant，发现任务收集失败，查看dr.log，发现报错：
+
+![image-20230901151506499](./images/image-20230901151506499.png)
+
+经查询SparkListenerResourceProfileAdded事件是在spark3.1x才有的，在spark-1.6.2中的ReplayListenerBus类遇到不识别的事件直接全部抛出异常，因此修改下面代码：
+
+![image-20230901151525960](./images/image-20230901151525960.png)
+
+重新打包，替换掉Dr-elephant lib下的spark-core包：
+
+```shell
+cp spark-core_2.10-1.6.2.jar lib/org.apache.spark.spark-core_2.10-1.6.2.jar
+```
+
+重启Dr-elephant问题解决。
+
+#### 如何同时收集spark2和spark3的任务信息呢？
+
+可以使用com.linkedin.drelephant.spark.fetchers.FSFetcher类来收集，修改app-conf/FetcherConf.xml
+
+```xml
+<fetcher>
+    <applicationtype>spark</applicationtype>
+    <classname>com.linkedin.drelephant.spark.fetchers.FSFetcher</classname>
+    <params>
+      <event_log_location_uri>/user/spark/applicationHistory</event_log_location_uri>
+    </params>
+  </fetcher>
+```
+
+修改spark3的配置spark.eventLog.dir=/user/spark/applicationHistory
+
+重启Dr-elephant，发现com.linkedin.drelephant.spark.fetchers.FSFetcher解析eventLog文件路径错误，导致无法收集，因此修改Dr-elephant的SparkUtils.scala：
+
+![image-20230901151554701](./images/image-20230901151554701.png)
+
+![image-20230901151611913](./images/image-20230901151611913.png)
+
+![image-20230901151625767](./images/image-20230901151625767.png)
+
+重新打包问题解决。
+
+#### spark2.x/3.x信息收集不全问题
+
+- Job和Stage信息不全。由于从 Spark 2.0 开始，在管理堆外的存储内存时不再基于 Tachyon，而是与堆外的执行内存一样，基于 JDK Unsafe API 实现，所以得修改Tachyon相关指标提取代码。修改Spark-core.1.6.2的JsonProtocol.scala：
+
+![img](./images/MCLASBIASE.png)
+
+![img](./images/IKLASBIASE.png)
+
+- Executor Metrics信息缺失。spark2/3的Task Metrics中没有Host Name、Data Read Method、Data Write Method字段，Input Metrics中没有导致异常。
+
+![img](./images/SWZASBIAEA.png)
+
+![img](./images/ZG7QSBIAQA.png)
+
+最终打好的[spark-core_2.10-1.6.2.jar](./dist/spark-core_2.10-1.6.2.jar)
