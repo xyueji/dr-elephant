@@ -161,7 +161,7 @@ sh bin/start.sh
 
 #### MapReduce任务采集
 
-MapReduce任务信息拉取是通过com.linkedin.drelephant.mapreduce.fetchers.MapReduceFSFetcherHadoop2这个类实现的，发现此类是通过拉取/user/history/done（mapreduce.jobhistory.done-dir）和/user/history/done_intermediate（mapreduce.jobhistory.intermediate-done-dir）目录获取的任务信息。因此Dr-elephant启动用户必须能够访问这2个用户。
+MapReduce任务信息拉取是通过com.linkedin.drelephant.mapreduce.fetchers.MapReduceFSFetcherHadoop2这个类实现的，发现此类是通过拉取/user/history/done（mapreduce.jobhistory.done-dir）和/user/history/done_intermediate（mapreduce.jobhistory.intermediate-done-dir）目录获取的任务信息。因此Dr-elephant启动用户必须能够访问这2个目录。
 
 另发现mapreduce任务类型无法识别：
 
