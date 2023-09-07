@@ -13,7 +13,7 @@ git clone https://github.com/xyueji/dr-elephant.git
 cd dr-elephant
 ```
 
-编译必须依赖activator，下载activator包（https://downloads.typesafe.com/typesafe-activator/1.3.12/typesafe-activator-1.3.12.zip,），并且设置环境变量
+编译必须依赖activator，下载activator包（[https://downloads.typesafe.com/typesafe-activator/1.3.12/typesafe-activator-1.3.12.zip](https://downloads.typesafe.com/typesafe-activator/1.3.12/typesafe-activator-1.3.12.zip)），并且设置环境变量
 
 ```shell
 export ACTIVATOR_HOME=/path/to/unzipped/activator
