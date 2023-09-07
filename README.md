@@ -347,4 +347,4 @@ cp spark-core_2.10-1.6.2.jar lib/org.apache.spark.spark-core_2.10-1.6.2.jar
 
 ![img](./images/ZG7QSBIAQA.png)
 
-最终打好的[spark-core_2.10-1.6.2.jar](./dist/spark-core_2.10-1.6.2.jar)
+最终打好的[spark-core_2.10-1.6.2.jar](./spark-core_2.10-1.6.2.jar)
