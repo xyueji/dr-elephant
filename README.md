@@ -348,3 +348,134 @@ cp spark-core_2.10-1.6.2.jar lib/org.apache.spark.spark-core_2.10-1.6.2.jar
 ![img](./images/ZG7QSBIAQA.png)
 
 最终打好的[spark-core_2.10-1.6.2.jar](./spark-core_2.10-1.6.2.jar)
+
+#### 添加yarn任务ttl功能
+
+由于线上yarn任务数量多，而Dr-elephant本身并没有滚动删除任务记录的功能，因此自己着手开发，在app-conf/GeneralConf.xml新增一个配置项：
+
+```xml
+<property>
+    <name>drelephant.analysis.history.ttl</name>
+    <value>604800000</value>
+    <description>Yarn app result history live of time, in milliseconds.
+    The value must be greater than "drelephant.analysis.fetch.initial.windowMillis".
+    </description>
+  </property>
+```
+
+在ElephantRunner.java run方法中添加如下代码：
+
+```java
+// Scrolling delete history yarn result，_historyTtlThread读取配置"drelephant.analysis.history.ttl"
+if (_historyTtl > 0) {
+  _historyTtlThread = new Thread(new HistoryTtlThread(), "HistoryTtl Thread");
+  _historyTtlThread.start();
+}
+```
+
+HistoryTtlThread：
+
+```java
+private class HistoryTtlThread implements Runnable {
+        @Override
+        public void run() {
+            List<AppResult> results = new ArrayList<>();
+            int failCount = 0;
+            int ttlJobs = 0;
+
+            long beginTime = Time.monotonicNow();
+            long finishTime = System.currentTimeMillis() - Math.max(_historyTtl, _initialFetchWindow);
+            do {
+                try {
+                    results = AppResult.find.select(AppResult.TABLE.ID)
+                            .where()
+                            .lt(AppResult.TABLE.FINISH_TIME, finishTime)
+                            .order()
+                            .desc(AppResult.TABLE.FINISH_TIME)
+                            .setMaxRows(1000)
+                            .findList();
+
+                    if (results != null && !results.isEmpty()) {
+                        ttlJobs += results.size();
+                        List<AppResult> finalResults = results;
+                        Ebean.execute(new TxRunnable() {
+                            public void run() {
+                                for (AppResult result : finalResults) {
+                                    result.delete();
+                                }
+                            }
+                        });
+                    }
+                } catch (Exception e) {
+                    failCount++;
+                    logger.error("Failed historyTtl jobs for analysis... ", e);
+                }
+
+            } while (results != null && !results.isEmpty() && failCount < 3);
+
+            long endTime = Time.monotonicNow();
+            logger.info("Finished historyTtl jobs for analysis... " + ttlJobs + " jobs deleted. "+ failCount + " times error. Took " +
+                    (endTime - beginTime) + " ms.");
+        }
+    }
+```
+
+上面代码通过ebean的orm框架可以实现级连删除，但是由于yarn_app_heuristic_result_details表结构并没有单个的自增主键id，导致级连删除失败，因此做如下改动：
+
+AppHeuristicResultDetails新增id字段，并把id字段设为主键：
+
+```java
+@Entity
+@Table(name = "yarn_app_heuristic_result_details")
+public class AppHeuristicResultDetails extends Model {
+
+    private static final long serialVersionUID = 3L;
+
+    public static final int NAME_LIMIT = 128;
+    public static final int VALUE_LIMIT = 255;
+    public static final int DETAILS_LIMIT = 65535;
+
+    public static class TABLE {
+        public static final String TABLE_NAME = "yarn_app_heuristic_result_details";
+        public static final String ID = "id";
+        public static final String APP_HEURISTIC_RESULT_ID = "yarnAppHeuristicResult";
+        public static final String NAME = "name";
+        public static final String VALUE = "value";
+        public static final String DETAILS = "details";
+    }
+
+    @JsonBackReference
+    @ManyToOne(cascade = CascadeType.ALL)
+    public AppHeuristicResult yarnAppHeuristicResult;
+
+    @JsonIgnore
+    @Id
+    public int id;
+
+    @Column(length = NAME_LIMIT, nullable = false)
+    public String name;
+
+    @Column(length = VALUE_LIMIT, nullable = false)
+    public String value;
+
+    @Column(nullable = true)
+    public String details;
+}
+```
+
+新增一个修改yarn_app_heuristic_result_details表结构的sql文件conf/evolutions/default/7.sql：
+
+```sql
+# --- !Ups
+
+ALTER TABLE yarn_app_heuristic_result_details
+    DROP PRIMARY KEY,
+    DROP FOREIGN KEY yarn_app_heuristic_result_details_f1;
+
+ALTER TABLE yarn_app_heuristic_result_details
+    ADD id INT AUTO_INCREMENT COMMENT 'The application heuristic result details id' FIRST,
+    ADD PRIMARY KEY (id),
+    ADD CONSTRAINT yarn_app_heuristic_result_details_f1 FOREIGN KEY (yarn_app_heuristic_result_id) REFERENCES yarn_app_heuristic_result (id);
+
+# --- !Downs
+```
