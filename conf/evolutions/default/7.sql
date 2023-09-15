@@ -21,7 +21,7 @@ ALTER TABLE yarn_app_heuristic_result_details
     DROP FOREIGN KEY yarn_app_heuristic_result_details_f1;
 
 ALTER TABLE yarn_app_heuristic_result_details
-    ADD id INT AUTO_INCREMENT COMMENT 'The application heuristic result details id' FIRST,
+    ADD id INT NOT NULL AUTO_INCREMENT COMMENT 'The application heuristic result details id' FIRST,
     ADD PRIMARY KEY (id),
     ADD CONSTRAINT yarn_app_heuristic_result_details_f1 FOREIGN KEY (yarn_app_heuristic_result_id) REFERENCES yarn_app_heuristic_result (id);
 
