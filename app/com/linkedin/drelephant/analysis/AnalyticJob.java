@@ -379,6 +379,9 @@ public class AnalyticJob {
             AppHeuristicResultDetails.DETAILS_LIMIT, getAppId());
         // This was added for AnalyticTest. Commenting this out to fix a bug. Also disabling AnalyticJobTest.
         //detail.yarnAppHeuristicResultDetails = new ArrayList<AppHeuristicResultDetails>();
+        if (detail.yarnAppHeuristicResultDetails == null) {
+          detail.yarnAppHeuristicResultDetails = new ArrayList<>();
+        }
         detail.yarnAppHeuristicResultDetails.add(heuristicDetail);
       }
       result.yarnAppHeuristicResults.add(detail);

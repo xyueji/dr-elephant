@@ -479,3 +479,72 @@ ALTER TABLE yarn_app_heuristic_result_details
 
 # --- !Downs
 ```
+#### 添加收集tez sql功能
+新增一个Heuristic：TezHiveQueryHeuristic
+```java
+/**
+ * Analyzes hive query info
+ */
+public class TezHiveQueryHeuristic implements Heuristic<TezApplicationData> {
+
+    /**
+     * hive conf
+     */
+    private static final String HIVE_QUERY_ID_CONF = "hive.query.id";
+    private static final String HIVE_QUERY_STRING = "hive.query.string";
+
+    private HeuristicConfigurationData _heuristicConfData;
+
+    public TezHiveQueryHeuristic(HeuristicConfigurationData heuristicConfData) {
+        this._heuristicConfData = heuristicConfData;
+    }
+
+    public HeuristicConfigurationData getHeuristicConfData() {
+        return _heuristicConfData;
+    }
+
+    public HeuristicResult apply(TezApplicationData data) {
+        if (!data.getSucceeded()) {
+            return null;
+        }
+
+        String queryId = data.getConf().getProperty(HIVE_QUERY_ID_CONF);
+        if (queryId == null) {
+            return null;
+        }
+
+        String queryString = data.getConf().getProperty(HIVE_QUERY_STRING);
+
+        if (queryString == null) {
+            return null;
+        }
+
+        queryString = decodeQueryString(queryString);
+        Severity severity = Severity.NONE;
+        HeuristicResult result = new HeuristicResult(_heuristicConfData.getClassName(),
+                _heuristicConfData.getHeuristicName(), severity, 0);
+
+        result.addResultDetail("Hive Query String", queryId, queryString);
+
+        return result;
+
+    }
+
+    private String decodeQueryString(String queryString) {
+        try {
+            return URLDecoder.decode(queryString, StandardCharsets.UTF_8.toString());
+        } catch (UnsupportedEncodingException e) {
+            return queryString;
+        }
+    }
+}
+```
+修改HeuristicConf.xml，添加hive query指标
+```xml
+<heuristic>
+    <applicationtype>tez</applicationtype>
+    <heuristicname>Hive Query</heuristicname>
+    <classname>com.linkedin.drelephant.tez.heuristics.TezHiveQueryHeuristic</classname>
+    <viewname>views.html.help.tez.helpMapperDataSkew</viewname>
+</heuristic>
+```

@@ -18,7 +18,6 @@
 <heuristics>
 
   <!-- TEZ HEURISTICS -->
-
   <heuristic>
     <applicationtype>tez</applicationtype>
     <heuristicname>Tez Mapper Data Skew</heuristicname>
@@ -169,6 +168,12 @@
     <!--<params>
       <memory_ratio_severity>0.6, 0.5, 0.4, 0.3</memory_ratio_severity>
     </params>-->
+  </heuristic>
+  <heuristic>
+    <applicationtype>tez</applicationtype>
+    <heuristicname>Hive Query</heuristicname>
+    <classname>com.linkedin.drelephant.tez.heuristics.TezHiveQueryHeuristic</classname>
+    <viewname>views.html.help.tez.helpMapperDataSkew</viewname>
   </heuristic>
 
   <!-- MAP-REDUCE HEURISTICS -->
